@@ -34,7 +34,9 @@ opcode_encodings = {
     "lhi": 0x4,
     "luhi": 0x5,
     "bne": 0x6,
-    "mv": 0x7
+    "mv": 0x7,
+    "add": 0x8,
+    "brk": 0x9,
 }
 
 
@@ -53,7 +55,7 @@ class IRInstruction:
             return instr | self.arguments[0].as_ra1() | self.arguments[1]
         elif self.operation == "lw" or self.operation == "sw" or self.operation == "mv":
             return instr | self.arguments[0].as_ra2() | self.arguments[1].as_ra1()
-        elif self.operation == "bne":
+        elif self.operation == "bne" or self.operation == "add":
             return instr | self.arguments[0].as_ra3() | self.arguments[1].as_ra1() | self.arguments[2].as_ra2()
         else:
             return instr
@@ -73,7 +75,7 @@ def main():
         source_lines = source.readlines()
         instrs: bytearray = bytearray()
         for line in source_lines:
-            instrs += bytearray(IRInstruction.parse(line).encode().to_bytes(4, byteorder="little"))
+            instrs += bytearray(IRInstruction.parse(line.strip()).encode().to_bytes(4, byteorder="little"))
         with open("out.bin", "wb") as out_file:
             out_file.write(instrs)
 

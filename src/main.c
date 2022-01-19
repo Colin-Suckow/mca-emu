@@ -22,6 +22,8 @@ typedef enum {
     LUHI,
     BNE,
     MV,
+    ADD,
+    BRK,
 } Opcode;
 
 typedef struct Instruction {
@@ -76,6 +78,8 @@ const char* opcode_name(Opcode opcode) {
         case LUHI: return "LUHI";
         case BNE: return "BNE";
         case MV: return "MV";
+        case ADD: return "ADD";
+        case BRK: return "BRK";
         default: return "UNKNOWN";
     }
 }
@@ -92,6 +96,7 @@ enum execution_error {
     SUCCESS = 0,
     UNKNOWN_OPCODE,
     ADDRESS_ALIGNMENT,
+    BREAKPOINT_HIT,
 };
 
 void cpu_exception_print(enum execution_error error, Instruction* instr) {
@@ -102,6 +107,9 @@ void cpu_exception_print(enum execution_error error, Instruction* instr) {
             break;
         case ADDRESS_ALIGNMENT:
             printf("Unaligned target address!");
+            break;
+        case BREAKPOINT_HIT:
+            printf("Breakpoint hit!\n");
             break;
         default:
             printf("Unknown exception! Did you forget to return SUCCESS from an op handler?");
@@ -179,6 +187,11 @@ enum execution_error op_mv(TestMachine* machine, Instruction* instr) {
     return SUCCESS;
 }
 
+enum execution_error op_add(TestMachine* machine, Instruction* instr) {
+    machine->regs.grs[instr->ra3] = machine->regs.grs[instr->ra1] + machine->regs.grs[instr->ra2];
+    return SUCCESS;
+}
+
 enum execution_error TestMachine_execute(TestMachine* machine, Instruction* instr) {
     uint32_t addr;
     switch(instr->opcode) {
@@ -190,6 +203,8 @@ enum execution_error TestMachine_execute(TestMachine* machine, Instruction* inst
         case LUHI: return op_luhi(machine, instr);
         case BNE: return op_bne(machine, instr);
         case MV: return op_mv(machine, instr);
+        case ADD: return op_add(machine, instr);
+        case BRK: return BREAKPOINT_HIT;
         default: return UNKNOWN_OPCODE;
     }
 }
@@ -212,21 +227,18 @@ int main(int argc, char **argv) {
     TestMachine_load_binary(machine);
 
     enum execution_error error;
-    for(int i = 0; i < 10; i++) {
+    while(1) {
         uint32_t instr_word = ((uint32_t) machine->mem[machine->regs.pc]) | ((uint32_t) machine->mem[machine->regs.pc + 1] << 8) | ((uint32_t) machine->mem[machine->regs.pc + 2] << 16) | ((uint32_t) machine->mem[machine->regs.pc + 3] << 24);
         Instruction instruction = decode_instruction_word(instr_word);
         if((error = TestMachine_execute(machine, &instruction)) != 0) {
             cpu_exception_print(error, &instruction);
+            printf("\n");
+            TestMachine_print_stats(machine);
             printf(" Exiting...\n");
+            TestMachine_destroy(machine);
             return -1;
         }
         machine->regs.pc += 4;
     }
-    printf("\n");
-    TestMachine_print_stats(machine);
-
-   
-
-    TestMachine_destroy(machine);
     return 0;
 }

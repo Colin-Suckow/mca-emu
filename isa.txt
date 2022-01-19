@@ -76,9 +76,22 @@ opcode 0x7
 mv r4 r2 # Copies value from r2 into r4
 Copies the value stored in ra1 into ra2
 
+### ADD
+opcode 0x8
+add r<target> r<v1> r<v2>
+Adds the values in registers ra1 and ra2 and stores result in ra3
+Overflow is not checked
+
+### BRK
+opcode 0x9
+break
+Throws BREAKPOINT_HIT exception
+Used for debugging
+
 ## Exceptions
 Machine will explode
 (Exceptions aren't checked right now. Emus should panic and physical hardware should halt)
 
 * UNKNOWN_OPCODE
 * ADDRESS_ALIGNMENT
+* BREAKPOINT_HIT

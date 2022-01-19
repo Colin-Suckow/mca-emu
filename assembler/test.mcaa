@@ -1,2 +1,7 @@
-luhi r3 $0xDEAD
-lhi r3 $0xBEEF
+    lhi r1 $0x0
+    lhi r2 $0x1
+    lhi r3 $0x64
+.loop
+    add r1 r1 r2
+    bne .loop r1 r3
+    brk
