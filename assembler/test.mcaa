@@ -1,0 +1,2 @@
+luhi r3 $0xDEAD
+lhi r3 $0xBEEF

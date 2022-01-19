@@ -1,0 +1,84 @@
+# ISA Definition
+This is a working document of information about the isa, as I build it
+Yes, this is becoming a crappy mips ripoff
+
+## Registers
+### Non standard registers
+PC - 32 bit program counter
+
+### General purpose registers
+0-31 - 32, 32 bit registers for general purposes
+reg0 MUST always be 0. In hardware it is physically linked to 0 instead of a register
+
+## Initialization
+Entrypoint is 0x800
+
+## Instructions
+Highest byte of address is opcode
+All instructions must be aligned to 32 bit words
+RA<n> are register arguments. They reference one of the gp registers
+(yes using 8 bits is very wasteful, but I don't care because this is more simple for now)
+
+all memory ops are little endian
+
+
+O-Type
+|   8 bits  |   8 bits  |     signed 16 bits   |
+|   OPCODE  |    RA1    |          Offset      |
+
+A-Type
+|   8 bits  |   8 bits  |   8 bits  |  8 bits  |
+|   OPCODE  |    RA1    |     RA2   |   RA3    |
+
+### NOP
+opcode: 0x0
+nop
+No operation, do nothing
+
+### JMP
+opcode: 0x1
+jmp r<target> $0x<offset>
+Jump the address signified by the signed offset added to value stored in ra1
+target calculation will over/under flow without exception
+Unaligned target address will cause an ADDRESS_ALIGNMENT exception
+
+### LW
+opcode 0x2
+lw r<target> r<addr>
+Loads a word from the memory address stored in RA1 into target register RA2
+
+### SW
+opcode 0x3
+sw <addr> <value>
+
+Stores a word from register RA1 into the memory address stored at target register RA2
+
+### LHI
+opcode 0x4
+lhi r<target> $0x<value>
+Load half immediate
+loads the 16 bits from offset into the lower 16 bits of register ra1
+
+### LUHI
+opcode 0x5
+luhi r<target> $0x<value>
+Load upper half immediate
+loads the 16 bits from offset into the upper 16 bits of register ra1
+
+### BNE
+opcode 0x6
+bne r<target> r<v1> r<v2>
+If the values stored in ra1 and ra2 are not equal, jump to the address stored in ra3
+if ra3 is not aligned AND the jump is taken, throw ADDRESS_ALIGNMENT exception
+
+### MV
+opcode 0x7
+mv r4 r2 # Copies value from r2 into r4
+Copies the value stored in ra1 into ra2
+
+## Exceptions
+Machine will explode
+(Exceptions aren't checked right now. Emus should panic and physical hardware should halt)
+
+* UNKNOWN_OPCODE
+* ADDRESS_ALIGNMENT
