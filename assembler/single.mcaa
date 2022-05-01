@@ -1,0 +1,2 @@
+lhi r2 $0x1
+lhi r3 $0x2

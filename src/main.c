@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
+
 typedef struct Registers {
     uint32_t pc;
     uint32_t grs[32];
@@ -36,7 +37,7 @@ typedef struct Instruction {
 
 TestMachine* TestMachine_new(uint32_t memory_size) {
     TestMachine* machine = malloc(sizeof(TestMachine));
-    uint32_t *memory = malloc(sizeof(uint8_t) * memory_size);
+    uint8_t *memory = malloc(sizeof(uint8_t) * memory_size);
     machine->regs.pc = 0x800; //Entrypoint
     machine->mem_len = memory_size;
     machine->mem = memory;
@@ -54,15 +55,15 @@ void TestMachine_print_stats(TestMachine* machine) {
     printf("Registers\n");
     printf("PC: 0x%x\n", machine->regs.pc);
     for(int i = 0; i < 32; i++) {
-        printf("g%u: 0x%x\n", i,  machine->regs.grs[i]);
+        printf("r%u: 0x%x\n", i,  machine->regs.grs[i]);
     }
 }
 
 Instruction decode_instruction_word(uint32_t word) {
     Instruction result;
-    result.opcode = (Opcode) word >> 24;
-    result.ra1 = (uint8_t) (word >> 16) & 0xFF;
-    result.ra2 = (uint8_t) (word >> 8) & 0xFF;
+    result.opcode = (Opcode) word >> 26;
+    result.ra1 = (uint8_t) (word >> 21) & 0x1F;
+    result.ra2 = (uint8_t) (word >> 16) & 0x1F;
     result.ra3 = (uint8_t) word & 0xFF;
     result.offset = (uint16_t) word & 0xFFFF;
     return result;
@@ -176,7 +177,7 @@ enum execution_error op_bne(TestMachine* machine, Instruction* instr) {
         if(machine->regs.grs[instr->ra2] % 4 != 0) {
             return ADDRESS_ALIGNMENT;
         } else {
-            machine->regs.pc = machine->regs.grs[instr->ra3];
+            machine->regs.pc += instr->offset;
         }
     }
     return SUCCESS;

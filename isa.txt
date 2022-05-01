@@ -23,12 +23,12 @@ all memory ops are little endian
 
 
 O-Type
-|   8 bits  |   8 bits  |     signed 16 bits   |
-|   OPCODE  |    RA1    |          Offset      |
+|   6 bits  |   5 bits  |  5 bits  |   signed 16 bits   |
+|   OPCODE  |    RA1    |   RA2    |       Offset       |
 
 A-Type
-|   8 bits  |   8 bits  |   8 bits  |  8 bits  |
-|   OPCODE  |    RA1    |     RA2   |   RA3    |
+|   6 bits  |   5 bits  |   5 bits  |  12 bits  |  5 bits  |
+|   OPCODE  |    RA1    |     RA2   |  Nothing  |   RA3    |
 
 ### NOP
 opcode: 0x0
@@ -67,9 +67,10 @@ loads the 16 bits from offset into the upper 16 bits of register ra1
 
 ### BNE
 opcode 0x6
-bne r<target> r<v1> r<v2>
-If the values stored in ra1 and ra2 are not equal, jump to the address stored in ra3
-if ra3 is not aligned AND the jump is taken, throw ADDRESS_ALIGNMENT exception
+bne <offset> r<v1> r<v2>
+If the values stored in ra1 and ra2 are not equal, jump to the current addr + the signed offset
+if target is not aligned AND the jump is taken, throw ADDRESS_ALIGNMENT exception
+Target calculation will over/underflow without exception
 
 ### MV
 opcode 0x7
